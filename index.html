@@ -156,9 +156,11 @@ function calculate() {
   const peakHours = 40;
   const annualHours = (peakWeeks * peakHours + (workingWeeks - peakWeeks) * 22.67) * FTE;
   const leaveDays = hasLongService ? 25 : 20;
+  const peakDayHours = 8;
+  const nonPeakDayHours = 7.56;
   const standardDayHours = 37 / 5; // 7.4 hrs/day
-  const leaveHours = leaveDays * standardDayHours * FTE;
-  const leaveInDays = leaveHours / standardDayHours;
+  const leaveHours = leaveDays * peakDayHours * FTE;
+  const leaveInPeakDays = leaveHours / peakDayHours;
   const leaveInPeakWeeks = leaveHours / 40;
   const nonPeakHours = (annualHours - (peakWeeks * peakHours * FTE)) / (workingWeeks - peakWeeks);
   const leaveInNonPeakWeeks = leaveHours / nonPeakHours;
@@ -167,7 +169,7 @@ function calculate() {
     FTE,
     annualHours,
     leaveHours,
-    leaveInDays,
+    leaveInPeakDays,
     leaveInPeakWeeks,
     leaveInNonPeakWeeks,
     nonPeakHours,
@@ -182,7 +184,7 @@ function calculate() {
       <tr><td><strong>FTE (calculated)</strong></td><td>${FTE.toFixed(4)}</td></tr>
       <tr><td>Total Contracted Hours</td><td>${annualHours.toFixed(2)} hrs</td></tr>
       <tr><td>Annual Leave (pro-rata)</td><td>${leaveHours.toFixed(2)} hrs</td></tr>
-      <tr><td>Equivalent to</td><td>${leaveInDays.toFixed(2)} days (based on 7.4 hrs/day), ${leaveInPeakWeeks.toFixed(2)} peak weeks, or ${leaveInNonPeakWeeks.toFixed(2)} non-peak weeks</td></tr>
+      <tr><td>Equivalent to</td><td>${leaveInPeakDays.toFixed(2)} days (based on 7.4 hrs/day), ${leaveInPeakWeeks.toFixed(2)} peak weeks, or ${leaveInNonPeakWeeks.toFixed(2)} non-peak weeks</td></tr>
     </table>
   `;
 
@@ -207,7 +209,7 @@ function calculate() {
   document.getElementById('explanation').innerHTML = `
     <h2>Daily Hours Used in Leave Deductions</h2>
     <p><strong>Peak Weeks:</strong> 8.00 hours/day</p>
-    <p><strong>Non-Peak Weeks:</strong> ${(resultData.averageHoursPerWeek / 5).toFixed(2)} hours/day</p>
+    <p><strong>Non-Peak Weeks:</strong> 7.56 hours/day (i.e. 7h 34m)</p>
     <p class="note">All leave is calculated using a consistent 5-day working week structure for simplicity and comparability.</p>
   `;
 }
@@ -215,7 +217,9 @@ function calculate() {
 function calculateLeaveImpact() {
   const days = parseFloat(document.getElementById('daysRequested').value);
   const weekType = document.querySelector('input[name="weekType"]:checked').value;
-  const hoursPerDay = weekType === 'peak' ? 8 : resultData.averageHoursPerWeek / 5;
+  const peakDayHours = 8;
+  const nonPeakDayHours = 7.56;
+  const hoursPerDay = weekType === 'peak' ? peakDayHours : nonPeakDayHours;
   const hoursRequested = days * hoursPerDay;
   const leaveBefore = resultData.leaveHours;
   const leaveAfter = leaveBefore - hoursRequested;
@@ -225,7 +229,7 @@ function calculateLeaveImpact() {
       <tr><td>Hours Requested</td><td>${hoursRequested.toFixed(2)} hrs</td></tr>
       <tr><td>Leave Before Request</td><td>${leaveBefore.toFixed(2)} hrs</td></tr>
       <tr><td>Remaining Leave (hrs)</td><td>${leaveAfter.toFixed(2)} hrs</td></tr>
-      <tr><td>Equivalent Remaining Leave</td><td>${(leaveAfter / 8).toFixed(2)} days (Peak) or ${(leaveAfter / (resultData.averageHoursPerWeek / 5)).toFixed(2)} days (Non-Peak)</td></tr>
+      <tr><td>Equivalent Remaining Leave</td><td>${(leaveAfter / peakDayHours).toFixed(2)} days (Peak) or ${(leaveAfter / nonPeakDayHours).toFixed(2)} days (Non-Peak)</td></tr>
     </table>
   `;
 }
@@ -233,7 +237,7 @@ function calculateLeaveImpact() {
 function downloadCSV() {
   const csv = `FTE,Annual Hours,Leave Hours,Leave Days (8 hrs),Leave Peak Weeks,Leave Non-Peak Weeks
 ` +
-    `${resultData.FTE.toFixed(4)},${resultData.annualHours.toFixed(2)},${resultData.leaveHours.toFixed(2)},${resultData.leaveInDays.toFixed(2)},${resultData.leaveInPeakWeeks.toFixed(2)},${resultData.leaveInNonPeakWeeks.toFixed(2)}`;
+    `${resultData.FTE.toFixed(4)},${resultData.annualHours.toFixed(2)},${resultData.leaveHours.toFixed(2)},${resultData.leaveInPeakDays.toFixed(2)},${resultData.leaveInPeakWeeks.toFixed(2)},${resultData.leaveInNonPeakWeeks.toFixed(2)}`;
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
