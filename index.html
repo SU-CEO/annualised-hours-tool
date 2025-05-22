@@ -142,3 +142,105 @@
   <div id="leaveEstimator" class="estimator"></div>
   <div id="workings" class="workings"></div>
   <div id="explanation" class="explanation"></div>
+
+<script>
+let resultData = {};
+
+function calculate() {
+  const weeklyHours = parseFloat(document.getElementById('weeklyHours').value);
+  const workingWeeks = parseFloat(document.getElementById('workingWeeks').value);
+  const hasLongService = document.getElementById('hasLongService').checked;
+
+  const FTE = (weeklyHours * workingWeeks) / 1924;
+  const peakWeeks = 43;
+  const peakHours = 40;
+  const annualHours = (peakWeeks * peakHours + (workingWeeks - peakWeeks) * 22.67) * FTE;
+  const leaveDays = hasLongService ? 25 : 20;
+  const leaveHours = leaveDays * 8 * FTE;
+  const leaveInDays = leaveHours / 8;
+  const leaveInPeakWeeks = leaveHours / 40;
+  const nonPeakHours = (annualHours - (peakWeeks * peakHours * FTE)) / (workingWeeks - peakWeeks);
+  const leaveInNonPeakWeeks = leaveHours / nonPeakHours;
+
+  resultData = {
+    FTE,
+    annualHours,
+    leaveHours,
+    leaveInDays,
+    leaveInPeakWeeks,
+    leaveInNonPeakWeeks,
+    nonPeakHours,
+    averageHoursPerWeek: annualHours / 52,
+    weeklyHours,
+    workingWeeks
+  };
+
+  document.getElementById('results').innerHTML = `
+    <h2>Annualised Hours Summary</h2>
+    <table>
+      <tr><td><strong>FTE (calculated)</strong></td><td>${FTE.toFixed(4)}</td></tr>
+      <tr><td>Total Contracted Hours</td><td>${annualHours.toFixed(2)} hrs</td></tr>
+      <tr><td>Annual Leave (pro-rata)</td><td>${leaveHours.toFixed(2)} hrs</td></tr>
+      <tr><td>Equivalent to</td><td>${leaveInDays.toFixed(2)} days (8 hrs/day), ${leaveInPeakWeeks.toFixed(2)} peak weeks, or ${leaveInNonPeakWeeks.toFixed(2)} non-peak weeks</td></tr>
+    </table>
+  `;
+
+  document.getElementById('leaveEstimator').innerHTML = `
+    <h2>Leave Request Estimator</h2>
+    <label for="daysRequested">Days of Leave Requested</label>
+    <input type="number" id="daysRequested" step="0.1" value="1">
+    <label><input type="radio" name="weekType" value="peak" checked> Applies to Peak Weeks</label>
+    <label><input type="radio" name="weekType" value="nonpeak"> Applies to Non-Peak Weeks</label>
+    <button class="btn" onclick="calculateLeaveImpact()">Estimate Leave Impact</button>
+    <div id="leaveOutput"></div>
+  `;
+
+  document.getElementById('workings').innerHTML = `
+    <h2>Workings (Pro-Rata Explained)</h2>
+    <p><strong>Pro-rata</strong> means your entitlement is proportionate to how much you work compared to a full-time employee (1,924 hours/year).</p>
+    <p>FTE = (Weekly Hours × Working Weeks) ÷ 1,924</p>
+    <p>Leave = ${leaveDays} × 8 × FTE</p>
+    <p>Annual Hours = (43 × 40 + (WorkingWeeks − 43) × 22.67) × FTE</p>
+  `;
+
+  document.getElementById('explanation').innerHTML = `
+    <h2>Daily Hours Used in Leave Deductions</h2>
+    <p><strong>Peak Weeks:</strong> 8.00 hours/day</p>
+    <p><strong>Non-Peak Weeks:</strong> ${(resultData.averageHoursPerWeek / 5).toFixed(2)} hours/day</p>
+    <p class="note">All leave is calculated using a consistent 5-day working week structure for simplicity and comparability.</p>
+  `;
+}
+
+function calculateLeaveImpact() {
+  const days = parseFloat(document.getElementById('daysRequested').value);
+  const weekType = document.querySelector('input[name="weekType"]:checked').value;
+  const hoursPerDay = weekType === 'peak' ? 8 : resultData.averageHoursPerWeek / 5;
+  const hoursRequested = days * hoursPerDay;
+  const leaveBefore = resultData.leaveHours;
+  const leaveAfter = leaveBefore - hoursRequested;
+
+  document.getElementById('leaveOutput').innerHTML = `
+    <table>
+      <tr><td>Hours Requested</td><td>${hoursRequested.toFixed(2)} hrs</td></tr>
+      <tr><td>Leave Before Request</td><td>${leaveBefore.toFixed(2)} hrs</td></tr>
+      <tr><td>Remaining Leave (hrs)</td><td>${leaveAfter.toFixed(2)} hrs</td></tr>
+      <tr><td>Equivalent Remaining Leave</td><td>${(leaveAfter / 8).toFixed(2)} days (Peak) or ${(leaveAfter / (resultData.averageHoursPerWeek / 5)).toFixed(2)} days (Non-Peak)</td></tr>
+    </table>
+  `;
+}
+
+function downloadCSV() {
+  const csv = `FTE,Annual Hours,Leave Hours,Leave Days (8 hrs),Leave Peak Weeks,Leave Non-Peak Weeks
+` +
+    `${resultData.FTE.toFixed(4)},${resultData.annualHours.toFixed(2)},${resultData.leaveHours.toFixed(2)},${resultData.leaveInDays.toFixed(2)},${resultData.leaveInPeakWeeks.toFixed(2)},${resultData.leaveInNonPeakWeeks.toFixed(2)}`;
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'annualised_hours_summary.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+console.log("Annualised Hours Calculator script loaded and ready.");
+</script>
+</body>
