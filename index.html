@@ -76,7 +76,7 @@
     <button onclick="calculate()">Calculate</button>
     <button onclick="downloadCSV()">Download CSV</button>
 
-    $1
+    
 
 <div class="results" id="comparison" style="margin-top: 20px; padding: 10px; background: #fefefe; border: 1px solid #ccc; display: none;">
   <h3>Comparison: Current vs Annualised</h3>
@@ -93,9 +93,10 @@
     let resultData = {};
 
     function calculate() {
-      const weeklyHours = parseFloat(document.getElementById('weeklyHours').value);
-      const workingWeeks = parseFloat(document.getElementById('workingWeeks').value);
-      const hasLongService = document.getElementById('longService').checked;
+      // Initial variable setup
+      // removed duplicate
+      // removed duplicate
+      // removed duplicate
 
       const currentAnnualHours = weeklyHours * workingWeeks;
       const currentLeave = (hasLongService ? 25 : 20) * 8 * (currentAnnualHours / 1924);
@@ -193,8 +194,8 @@
   </ul>
   <p><strong>Illustrative Daily Lengths:</strong></p>
   <ul>
-    <li>Peak Week: Full day = 8 hours, Half day = 4 hours</li>
-    <li>Non-Peak Week: Full day = Weekly hours ÷ 5, Half day = Weekly hours ÷ 10</li>
+    <li>Peak Week: Full day = 8 hours, <span style='color:#888;'>Half day = 4 hours</span></li>
+    <li>Non-Peak Week: Full day = Weekly hours ÷ 5, <span style='color:#888;'>Half day = Weekly hours ÷ 10</span></li>
   </ul>
   <p>Always check your actual work pattern against these approximations to understand your specific entitlement.</p>
 </div>
