@@ -89,8 +89,10 @@
       const fullTimeAnnualHours = (40 * 43) + ((workingWeeks - 43) * 22.67);
       const userAnnualHours = fullTimeAnnualHours * fte * (workingWeeks / 52);
 
-      const totalLeaveDays = annualLeaveDays + bankHolidays + closureDays;
+      const totalLeaveDays = annualLeaveDays;
+      const totalFixedDays = bankHolidays + closureDays;
       const leaveHours = totalLeaveDays * 8 * fte;
+      const fixedLeaveHours = totalFixedDays * 8 * fte;
 
       const peakWeekHours = 40 * fte;
       const peakWeeks = 43;
@@ -116,12 +118,14 @@
 
       const resultsDiv = document.getElementById('results');
       resultsDiv.innerHTML = `
-        <strong>Total Contracted Hours:</strong> ${resultData['Annual Contracted Hours']} hrs<br>
-        <strong>Total Leave:</strong> ${resultData['Total Leave (hrs)']} hrs<br>
-        - Equivalent to ${leaveInDays} days at 8 hrs/day<br>
-        - Or ${leaveInPeakWeeks} peak weeks (40 hrs/week)<br>
-        - Or ${leaveInNonPeakWeeks} non-peak weeks (${resultData['Non-Peak Week Hours']} hrs/week)
-        <div class="workings">
+        <table style="width:100%; border-collapse: collapse;">
+          <tr style="background:#dff0ff;"><th colspan="2">Annualised Hours Summary</th></tr>
+          <tr><td><strong>Total Contracted Hours:</strong></td><td>${resultData['Annual Contracted Hours']} hrs</td></tr>
+          <tr><td><strong>Annual Leave Only:</strong></td><td>${leaveHours.toFixed(2)} hrs</td></tr>
+          <tr><td colspan="2">Equivalent to ${leaveInDays} days (8 hrs/day), ${leaveInPeakWeeks} peak weeks, or ${leaveInNonPeakWeeks} non-peak weeks</td></tr>
+          <tr><td colspan="2" style="font-size: 0.9em; color: #666;">(Excludes 13 Closure Days and 8 Public Holidays, which are fixed and not deducted from your annual leave balance)</td></tr>
+        </table>
+        <div class=\"workings\">
           <hr>
           <strong>Workings:</strong><br>
           Annual hours = (43 × 40) + ((WorkingWeeks − 43) × 22.67) × FTE × (WorkingWeeks / 52)<br>
