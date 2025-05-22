@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Annualised Hours Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 0;
+      background: #f4f4f4;
+    }
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 700px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label, input {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    input[type="number"] {
+      padding: 8px;
+      font-size: 1em;
+    }
+    button {
+      padding: 10px;
+      background: #0077cc;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .results {
+      margin-top: 20px;
+      padding: 10px;
+      background: #e6f7ff;
+      border-left: 4px solid #0077cc;
+    }
+    .workings {
+      font-size: 0.9em;
+      margin-top: 10px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Annualised Hours & Leave Calculator (Annualised Model)</h2>
+
+    <label for="fte">FTE (e.g., 1 for full-time, 0.8 for 80%)</label>
+    <input type="number" id="fte" step="0.01" value="1">
+
+    <label for="workingWeeks">Working Weeks per Year</label>
+    <input type="number" id="workingWeeks" step="0.1" value="52">
+
+    <label for="annualLeave">Annual Leave Days (default 20)</label>
+    <input type="number" id="annualLeave" step="0.1" placeholder="Default is 20">
+
+    <label for="bankHolidays">Bank Holidays (default 8)</label>
+    <input type="number" id="bankHolidays" step="0.1" placeholder="Default is 8">
+
+    <label for="closureDays">Closure Days (default 13)</label>
+    <input type="number" id="closureDays" step="0.1" placeholder="Default is 13">
+
+    <button onclick="calculate()">Calculate</button>
+    <button onclick="downloadCSV()">Download CSV</button>
+
+    <div class="results" id="results"></div>
+  </div>
+
+  <script>
+    let resultData = {};
+
+    function calculate() {
+      const fte = parseFloat(document.getElementById('fte').value);
+      const workingWeeks = parseFloat(document.getElementById('workingWeeks').value);
+
+      const annualLeaveDays = document.getElementById('annualLeave').value ? parseFloat(document.getElementById('annualLeave').value) : 20;
+      const bankHolidays = document.getElementById('bankHolidays').value ? parseFloat(document.getElementById('bankHolidays').value) : 8;
+      const closureDays = document.getElementById('closureDays').value ? parseFloat(document.getElementById('closureDays').value) : 13;
+
+      const fullTimeAnnualHours = (40 * 43) + ((workingWeeks - 43) * 22.67);
+      const userAnnualHours = fullTimeAnnualHours * fte * (workingWeeks / 52);
+
+      const totalLeaveDays = annualLeaveDays + bankHolidays + closureDays;
+      const leaveHours = totalLeaveDays * 8 * fte;
+
+      const peakWeekHours = 40 * fte;
+      const peakWeeks = 43;
+      const reducedWeeks = workingWeeks - peakWeeks;
+      const reducedWeekHours = (userAnnualHours - (peakWeeks * peakWeekHours)) / reducedWeeks;
+
+      const leaveInPeakWeeks = (leaveHours / peakWeekHours).toFixed(2);
+      const leaveInReducedWeeks = (leaveHours / reducedWeekHours).toFixed(2);
+      const leaveInDays = (leaveHours / 8).toFixed(2);
+
+      resultData = {
+        'FTE': fte,
+        'Working Weeks': workingWeeks,
+        'Annual Leave Days': annualLeaveDays,
+        'Bank Holidays': bankHolidays,
+        'Closure Days': closureDays,
+        'Total Leave (hrs)': leaveHours.toFixed(2),
+        'Annual Contracted Hours': userAnnualHours.toFixed(2),
+        'Peak Week Hours': peakWeekHours.toFixed(2),
+        'Reduced Weeks': reducedWeeks.toFixed(2),
+        'Reduced Week Hours': reducedWeekHours.toFixed(2)
+      };
+
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = `
+        <strong>Total Contracted Hours:</strong> ${resultData['Annual Contracted Hours']} hrs<br>
+        <strong>Total Leave:</strong> ${resultData['Total Leave (hrs)']} hrs<br>
+        - Equivalent to ${leaveInDays} days at 8 hrs/day<br>
+        - Or ${leaveInPeakWeeks} peak weeks (40 hrs/week)<br>
+        - Or ${leaveInReducedWeeks} reduced weeks (${resultData['Reduced Week Hours']} hrs/week)
+        <div class="workings">
+          <hr>
+          <strong>Workings:</strong><br>
+          Annual hours = (43 × 40) + ((WorkingWeeks − 43) × 22.67) × FTE × (WorkingWeeks / 52)<br>
+          Leave hours = (AnnualLeave + BankHolidays + ClosureDays) × 8 × FTE<br>
+          Peak week = 40 hrs × FTE<br>
+          Reduced week = derived from balancing remainder<br>
+        </div>
+      `;
+    }
+
+    function downloadCSV() {
+      if (!resultData || Object.keys(resultData).length === 0) {
+        alert('Please calculate first.');
+        return;
+      }
+      const headers = Object.keys(resultData).join(',');
+      const values = Object.values(resultData).join(',');
+      const csvContent = `${headers}\n${values}`;
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'annualised_hours_summary.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
