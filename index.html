@@ -156,8 +156,9 @@ function calculate() {
   const peakHours = 40;
   const annualHours = (peakWeeks * peakHours + (workingWeeks - peakWeeks) * 22.67) * FTE;
   const leaveDays = hasLongService ? 25 : 20;
-  const leaveHours = leaveDays * 8 * FTE;
-  const leaveInDays = leaveHours / 8;
+  const standardDayHours = 37 / 5; // 7.4 hrs/day
+  const leaveHours = leaveDays * standardDayHours * FTE;
+  const leaveInDays = leaveHours / standardDayHours;
   const leaveInPeakWeeks = leaveHours / 40;
   const nonPeakHours = (annualHours - (peakWeeks * peakHours * FTE)) / (workingWeeks - peakWeeks);
   const leaveInNonPeakWeeks = leaveHours / nonPeakHours;
@@ -181,7 +182,7 @@ function calculate() {
       <tr><td><strong>FTE (calculated)</strong></td><td>${FTE.toFixed(4)}</td></tr>
       <tr><td>Total Contracted Hours</td><td>${annualHours.toFixed(2)} hrs</td></tr>
       <tr><td>Annual Leave (pro-rata)</td><td>${leaveHours.toFixed(2)} hrs</td></tr>
-      <tr><td>Equivalent to</td><td>${leaveInDays.toFixed(2)} days (Peak: 8 hrs/day, Non-Peak: ${(resultData.averageHoursPerWeek / 5).toFixed(2)} hrs/day), ${leaveInPeakWeeks.toFixed(2)} peak weeks, or ${leaveInNonPeakWeeks.toFixed(2)} non-peak weeks</td></tr>
+      <tr><td>Equivalent to</td><td>${leaveInDays.toFixed(2)} days (based on 7.4 hrs/day), ${leaveInPeakWeeks.toFixed(2)} peak weeks, or ${leaveInNonPeakWeeks.toFixed(2)} non-peak weeks</td></tr>
     </table>
   `;
 
@@ -199,7 +200,7 @@ function calculate() {
     <h2>Workings (Pro-Rata Explained)</h2>
     <p><strong>Pro-rata</strong> means your entitlement is proportionate to how much you work compared to a full-time employee (1,924 hours/year).</p>
     <p>FTE = (Weekly Hours × Working Weeks) ÷ 1,924</p>
-    <p>Leave = ${leaveDays} × 8 × FTE</p>
+    <p>Leave = ${leaveDays} × 7.4 × FTE</p>
     <p>Annual Hours = (43 × 40 + (WorkingWeeks − 43) × 22.67) × FTE</p>
   `;
 
