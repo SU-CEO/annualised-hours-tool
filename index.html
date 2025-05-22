@@ -120,7 +120,8 @@ function calculate() {
     leaveInDays,
     leaveInPeakWeeks,
     leaveInNonPeakWeeks,
-    nonPeakHours
+    nonPeakHours,
+    averageHoursPerWeek: annualHours / 52
   };
 
   document.getElementById('results').innerHTML = `
@@ -153,16 +154,16 @@ function calculate() {
 
   document.getElementById('explanation').innerHTML = `
     <h2>Illustrative Daily Lengths:</h2>
-    <p>Full day (Peak Week) = 8 hours<br><span class="half-day">Half day = 4 hours</span></p>
-    <p>Full day (Non-Peak) = ${(nonPeakHours / 3).toFixed(2)} hours<br><span class="half-day">Half day = ${(nonPeakHours / 6).toFixed(2)} hours</span></p>
-    <p class="note">Excludes 13 Closure Days and 8 Public Holidays, which are fixed and not deducted from your annual leave balance.</p>
+    <p>Average working day (based on 52 weeks) = ${(resultData.averageHoursPerWeek / 5).toFixed(2)} hours</p>
+    <p class="note">This average is used to calculate leave deductions in non-peak weeks, for consistent treatment across the annualised model.<br>
+    It aligns with the assumption that all leave is accounted for using a 5-day week baseline.</p>
   `;
 }
 
 function calculateLeaveImpact() {
   const days = parseFloat(document.getElementById('daysRequested').value);
   const weekType = document.querySelector('input[name="weekType"]:checked').value;
-  const hoursPerDay = weekType === 'peak' ? 8 : resultData.nonPeakHours / 3;
+  const hoursPerDay = resultData.averageHoursPerWeek / 5; // always use 5-day week standard
   const hoursRequested = days * hoursPerDay;
   const leaveBefore = resultData.leaveHours;
   const leaveAfter = leaveBefore - hoursRequested;
@@ -172,7 +173,7 @@ function calculateLeaveImpact() {
       <tr><td>Hours Requested</td><td>${hoursRequested.toFixed(2)} hrs</td></tr>
       <tr><td>Leave Before Request</td><td>${leaveBefore.toFixed(2)} hrs</td></tr>
       <tr><td>Remaining Leave (hrs)</td><td>${leaveAfter.toFixed(2)} hrs</td></tr>
-      <tr><td>Equivalent Remaining Leave</td><td>${(leaveAfter / 8).toFixed(2)} days (Peak) or ${(leaveAfter / (resultData.nonPeakHours / 3)).toFixed(2)} days (Non-Peak)</td></tr>
+      <tr><td>Equivalent Remaining Leave</td><td>${(leaveAfter / 8).toFixed(2)} days (Peak) or ${(leaveAfter / (resultData.averageHoursPerWeek / 5)).toFixed(2)} days (Standardised)</td></tr>
     </table>
   `;
 }
