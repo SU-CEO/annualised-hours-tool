@@ -6,6 +6,7 @@
   <title>Annualised Hours Calculator</title>
   <style>
     body {
+      line-height: 1.6;
       font-family: Arial, sans-serif;
       margin: 20px;
       padding: 0;
@@ -54,13 +55,17 @@
   <div class="container">
     <h2>Annualised Hours & Leave Calculator (Annualised Model)</h2>
 
-    <label for="fte">FTE (e.g., 1 for full-time, 0.8 for 80%)</label>
-    <input type="number" id="fte" step="0.01" value="1">
+    <label for="weeklyHours">Current Weekly Hours</label>
+    <span title="This is the number of hours you are contracted to work each week."><small style="color:#555;">(e.g., 22.5 hours if working 3 days at 7.5 hrs/day)</small></span>
+    <input type="number" id="weeklyHours" step="0.1" placeholder="e.g., 22.5">
+
+    
 
     <label for="workingWeeks">Working Weeks per Year</label>
+    <span title="This is the number of weeks you work in the year."><small style="color:#555;">(e.g., 44 if you don’t work in summer holidays)</small></span>
     <input type="number" id="workingWeeks" step="0.1" value="52">
 
-    <label><input type="checkbox" id="longService"> Tick if you have 5+ years of service (extra 5 days leave)</label>
+    <label><input type="checkbox" id="longService"><span title="Staff with 5+ years of service receive 5 extra days of annual leave."> Tick if you have 5+ years of service (extra 5 days leave)</label>
 
     <label for="bankHolidays">Bank Holidays (default 8)</label>
     <input type="number" id="bankHolidays" step="0.1" placeholder="Default is 8">
@@ -71,14 +76,34 @@
     <button onclick="calculate()">Calculate</button>
     <button onclick="downloadCSV()">Download CSV</button>
 
-    <div class="results" id="results"></div>
+    $1
+
+<div class="results" id="comparison" style="margin-top: 20px; padding: 10px; background: #fefefe; border: 1px solid #ccc; display: none;">
+  <h3>Comparison: Current vs Annualised</h3>
+  <table style="width:100%; border-collapse: collapse;">
+    <tr style="background-color: #f0f0f0;"><th>Aspect</th><th>Current Model</th><th>Annualised Model</th></tr>
+    <tr><td>Annual Hours</td><td id="currentHours"></td><td id="annualisedHours"></td></tr>
+    <tr><td>Leave (hrs)</td><td id="currentLeave"></td><td id="annualisedLeave"></td></tr>
+    <tr><td>FTE</td><td id="currentFTE"></td><td id="annualisedFTE"></td></tr>
+  </table>
+</div>
   </div>
 
   <script>
     let resultData = {};
 
     function calculate() {
-      const fte = parseFloat(document.getElementById('fte').value);
+      const weeklyHours = parseFloat(document.getElementById('weeklyHours').value);
+      const workingWeeks = parseFloat(document.getElementById('workingWeeks').value);
+      const hasLongService = document.getElementById('longService').checked;
+
+      const currentAnnualHours = weeklyHours * workingWeeks;
+      const currentLeave = (hasLongService ? 25 : 20) * 8 * (currentAnnualHours / 1924);
+      const currentFTE = (currentAnnualHours / 1924).toFixed(4);
+      const weeklyHours = parseFloat(document.getElementById('weeklyHours').value);
+      // Removed duplicate workingWeeks input
+      const annualHours = weeklyHours * workingWeeks;
+      const fte = annualHours / 1924;
       const workingWeeks = parseFloat(document.getElementById('workingWeeks').value);
       const hasLongService = document.getElementById('longService').checked;
 
@@ -104,7 +129,8 @@
       const leaveInDays = (leaveHours / 8).toFixed(2);
 
       resultData = {
-        'FTE': fte,
+        'FTE (calculated)': fte.toFixed(4),
+        'Current Weekly Hours': weeklyHours,
         'Working Weeks': workingWeeks,
         'Annual Leave Days (incl. Long Service)': annualLeaveDays,
         'Bank Holidays': bankHolidays,
@@ -119,15 +145,17 @@
       const resultsDiv = document.getElementById('results');
       resultsDiv.innerHTML = `
         <table style="width:100%; border-collapse: collapse;">
+  <colgroup><col style="width: 50%;"><col style="width: 50%;"></colgroup>
           <tr style="background:#dff0ff;"><th colspan="2">Annualised Hours Summary</th></tr>
-          <tr><td><strong>Total Contracted Hours:</strong></td><td>${resultData['Annual Contracted Hours']} hrs</td></tr>
-          <tr><td><strong>Annual Leave Only:</strong></td><td>${leaveHours.toFixed(2)} hrs</td></tr>
-          <tr><td colspan="2">Equivalent to ${leaveInDays} days (8 hrs/day), ${leaveInPeakWeeks} peak weeks, or ${leaveInNonPeakWeeks} non-peak weeks</td></tr>
-          <tr><td colspan="2" style="font-size: 0.9em; color: #666;">(Excludes 13 Closure Days and 8 Public Holidays, which are fixed and not deducted from your annual leave balance)</td></tr>
+          <tr style="background-color:#f9f9f9;"><td><strong>Total Contracted Hours:</strong></td><td>${resultData['Annual Contracted Hours']} hrs</td></tr>
+          <tr style="background-color:#ffffff;"><td><strong>Annual Leave Only:</strong></td><td>${leaveHours.toFixed(2)} hrs</td></tr>
+          <tr style="background-color:#f9f9f9;"><td colspan="2">Equivalent to ${leaveInDays} days (based on an average of 7.4 hours/day, i.e., 7 hours and 24 minutes), ${leaveInPeakWeeks} peak weeks, or ${leaveInNonPeakWeeks} non-peak weeks</td></tr>
+          <tr><td colspan="2" style="font-size: 0.9em; color: #666;">(Excludes 13 Closure Days and 8 Public Holidays, which are fixed and not deducted from your annual leave balance)</td>
+      <tr><td colspan="2" style="font-size: 0.9em; color: #666;">(All calculations are based on your working pattern and pro-rata entitlements)</td></tr></tr>
         </table>
-        <div class=\"workings\">
+        <div class=\"workings\" style=\"background-color:#f0f0f0; padding: 10px; border-radius: 6px; line-height: 1.6;\">
           <hr>
-          <strong>Workings:</strong><br>
+          <strong>Workings (all calculations are pro-rata based on annual hours worked. 'Pro-rata' means your entitlement is proportionate to how much you work compared to a full-time employee):</strong><br>
           Annual hours = (43 × 40) + ((WorkingWeeks − 43) × 22.67) × FTE × (WorkingWeeks / 52)<br>
           Leave hours = (AnnualLeave + BankHolidays + ClosureDays) × 8 × FTE<br>
           Peak week = 40 hrs × FTE<br>
@@ -156,7 +184,7 @@
     }
   </script>
 <div class="container" style="margin-top: 20px; font-size: 0.95em;">
-  <p><strong>Explanation:</strong></p>
+  <p style="margin: 1em 0;"><strong>Explanation:</strong></p>
   <p>Leave is calculated in <strong>hours</strong> to ensure fairness across different working patterns and to reflect the actual time employees are entitled to take off.</p>
   <p>Under the annualised model, the year is split into:</p>
   <ul>
@@ -172,12 +200,14 @@
 </div>
 
 <div class="container" style="margin-top: 40px; font-size: 0.95em; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 20px; border-radius: 8px; box-shadow: 0 0 12px rgba(0,0,0,0.05);">
-  <h3 style="margin-top: 0;">Example Leave Request Estimator</h3>
+  <h3 style="margin-top: 0;">Leave Request Estimator</h3>
   <label for="leaveDaysRequested">Enter number of leave days you want to request:</label>
   <input type="number" id="leaveDaysRequested" step="0.1" placeholder="e.g., 2">
 
-  <label><input type="radio" name="weekType" value="peak" checked> Applies to Peak Week</label>
-  <label><input type="radio" name="weekType" value="nonpeak"> Applies to Non-Peak Week</label>
+  <div style="display: flex; gap: 20px; align-items: center;">
+    <label style="display: flex; align-items: center;"><input type="radio" name="weekType" value="peak" checked style="margin-right: 6px;">Applies to Peak Week</label>
+    <label style="display: flex; align-items: center;"><input type="radio" name="weekType" value="nonpeak" style="margin-right: 6px;">Applies to Non-Peak Week</label>
+  </div>
 
   <button onclick="calculateLeaveImpact()">Estimate Leave Impact</button>
 
@@ -204,9 +234,18 @@ function calculateLeaveImpact() {
   const daysLeftPeak = (remainingBalance / peakDayHours).toFixed(2);
   const daysLeftNonPeak = (remainingBalance / nonPeakDayHours).toFixed(2);
 
+  document.getElementById('comparison').style.display = 'block';
+  document.getElementById('currentHours').innerText = `${currentAnnualHours.toFixed(2)} hrs`;
+  document.getElementById('annualisedHours').innerText = `${userAnnualHours.toFixed(2)} hrs`;
+  document.getElementById('currentLeave').innerText = `${currentLeave.toFixed(2)} hrs`;
+  document.getElementById('annualisedLeave').innerText = `${leaveHours.toFixed(2)} hrs`;
+  document.getElementById('currentFTE').innerText = currentFTE;
+  document.getElementById('annualisedFTE').innerText = fte.toFixed(4);
+
   document.getElementById('leaveEstimatorResult').innerHTML = `
     <table style="width:100%; border-collapse: collapse;">
       <tr><td><strong>Hours Requested:</strong></td><td>${hoursRequested.toFixed(2)} hrs</td></tr>
+      <tr><td><strong>Leave Before Request:</strong></td><td>${leaveBalance.toFixed(2)} hrs</td></tr>
       <tr><td><strong>Remaining Leave (hrs):</strong></td><td>${remainingBalance.toFixed(2)} hrs</td></tr>
       <tr><td><strong>Equivalent Remaining Leave:</strong></td><td>${daysLeftPeak} days (Peak) or ${daysLeftNonPeak} days (Non-Peak)</td></tr>
     </table>
