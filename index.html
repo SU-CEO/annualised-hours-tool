@@ -93,20 +93,16 @@
     let resultData = {};
 
     function calculate() {
-      // Initial variable setup
-      // removed duplicate
-      // removed duplicate
-      // removed duplicate
+      const weeklyHours = parseFloat(document.getElementById('weeklyHours').value);
+      const workingWeeks = parseFloat(document.getElementById('workingWeeks').value);
+      const hasLongService = document.getElementById('longService').checked;
 
       const currentAnnualHours = weeklyHours * workingWeeks;
       const currentLeave = (hasLongService ? 25 : 20) * 8 * (currentAnnualHours / 1924);
       const currentFTE = (currentAnnualHours / 1924).toFixed(4);
-      const weeklyHours = parseFloat(document.getElementById('weeklyHours').value);
-      // Removed duplicate workingWeeks input
+
       const annualHours = weeklyHours * workingWeeks;
       const fte = annualHours / 1924;
-      const workingWeeks = parseFloat(document.getElementById('workingWeeks').value);
-      const hasLongService = document.getElementById('longService').checked;
 
       const annualLeaveDays = hasLongService ? 25 : 20;
       const bankHolidays = document.getElementById('bankHolidays').value ? parseFloat(document.getElementById('bankHolidays').value) : 8;
