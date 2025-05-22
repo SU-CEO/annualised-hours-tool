@@ -119,4 +119,16 @@
     <button class="btn" onclick="window.print()">Print Summary</button>
   </div>
 
-  <!-- Original calculator inputs and output containers remain intact here -->
+  <label for="weeklyHours">Current Weekly Hours</label>
+  <input type="number" id="weeklyHours" step="0.1" value="37">
+  <label for="workingWeeks">Working Weeks per Year</label>
+  <input type="number" id="workingWeeks" step="0.1" value="52">
+  <label><input type="checkbox" id="hasLongService"> I have 5+ years of service</label>
+  <button class="btn" onclick="calculate()">Calculate</button>
+  <button class="btn" onclick="downloadCSV()">Download CSV</button>
+
+  <div id="results" class="results"></div>
+  <div id="comparator" class="comparator"><h2>Comparison: Current vs Annualised Model</h2><div id="comparisonTable"></div></div>
+  <div id="leaveEstimator" class="estimator"></div>
+  <div id="workings" class="workings"></div>
+  <div id="explanation" class="explanation"></div>
