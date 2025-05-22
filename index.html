@@ -116,7 +116,17 @@
       <li><strong>Step 3:</strong> Use the "Leave Request Estimator" to see how many hours would be deducted for taking leave during peak or non-peak periods.</li>
     </ul>
     <p><strong>Note:</strong> This tool follows the standard annualised model: 43 peak weeks at 40 hours per week, and 9 non-peak weeks based on a 3-day week averaging 22.67 hours per week. For avoidance of doubt, Christmas and Easter closures fall within Peak Weeks. Any contractual deviations (e.g. TOIL, compressed weeks, bespoke working patterns) are <em>not</em> factored in here and should be calculated separately. Contact HR for assistance.</p>
-    <button class="btn" onclick="window.print()">Print Summary</button>
+
+    <h3>Example: Current vs Annualised Model (Full-Time Staff)</h3>
+    <table>
+      <tr><th>Measure</th><th>Current Pattern</th><th>Annualised Model</th></tr>
+      <tr><td>Weekly Hours</td><td>37.00 hrs</td><td>Peak: 40 hrs, Non-Peak: ~22.67 hrs</td></tr>
+      <tr><td>Working Weeks</td><td>52</td><td>52 (43 Peak + 9 Non-Peak)</td></tr>
+      <tr><td>Total Annual Hours</td><td>1,924.00 hrs</td><td>1,924.00 hrs</td></tr>
+      <tr><td>FTE</td><td>1.0000</td><td>1.0000</td></tr>
+      <tr><td>Leave Entitlement (hrs)</td><td>200.00 hrs</td><td>200.00 hrs</td></tr>
+    </table>
+    <p class="note">This table illustrates how hours and leave stay consistent under the Annualised Hours model, but are distributed differently between peak and non-peak periods.</p>
   </div>
 
   <label for="weeklyHours">Current Weekly Hours</label>
@@ -128,7 +138,7 @@
   <button class="btn" onclick="downloadCSV()">Download CSV</button>
 
   <div id="results" class="results"></div>
-  <div id="comparator" class="comparator"><h2>Comparison: Current vs Annualised Model</h2><div id="comparisonTable"></div></div>
+  </div>
   <div id="leaveEstimator" class="estimator"></div>
   <div id="workings" class="workings"></div>
   <div id="explanation" class="explanation"></div>
