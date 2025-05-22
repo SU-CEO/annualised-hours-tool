@@ -181,7 +181,7 @@ function calculate() {
       <tr><td><strong>FTE (calculated)</strong></td><td>${FTE.toFixed(4)}</td></tr>
       <tr><td>Total Contracted Hours</td><td>${annualHours.toFixed(2)} hrs</td></tr>
       <tr><td>Annual Leave (pro-rata)</td><td>${leaveHours.toFixed(2)} hrs</td></tr>
-      <tr><td>Equivalent to</td><td>${leaveInDays.toFixed(2)} days (8 hrs/day), ${leaveInPeakWeeks.toFixed(2)} peak weeks, or ${leaveInNonPeakWeeks.toFixed(2)} non-peak weeks</td></tr>
+      <tr><td>Equivalent to</td><td>${leaveInDays.toFixed(2)} days (Peak: 8 hrs/day, Non-Peak: ${(resultData.averageHoursPerWeek / 5).toFixed(2)} hrs/day), ${leaveInPeakWeeks.toFixed(2)} peak weeks, or ${leaveInNonPeakWeeks.toFixed(2)} non-peak weeks</td></tr>
     </table>
   `;
 
