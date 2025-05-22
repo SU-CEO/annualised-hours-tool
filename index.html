@@ -24,7 +24,7 @@
       width: 100%;
       margin-bottom: 10px;
     }
-    input[type="number"] {
+    input[type="number"], input[type="checkbox"] {
       padding: 8px;
       font-size: 1em;
     }
@@ -60,8 +60,7 @@
     <label for="workingWeeks">Working Weeks per Year</label>
     <input type="number" id="workingWeeks" step="0.1" value="52">
 
-    <label for="annualLeave">Annual Leave Days (default 20)</label>
-    <input type="number" id="annualLeave" step="0.1" placeholder="Default is 20">
+    <label><input type="checkbox" id="longService"> Tick if you have 5+ years of service (extra 5 days leave)</label>
 
     <label for="bankHolidays">Bank Holidays (default 8)</label>
     <input type="number" id="bankHolidays" step="0.1" placeholder="Default is 8">
@@ -81,8 +80,9 @@
     function calculate() {
       const fte = parseFloat(document.getElementById('fte').value);
       const workingWeeks = parseFloat(document.getElementById('workingWeeks').value);
+      const hasLongService = document.getElementById('longService').checked;
 
-      const annualLeaveDays = document.getElementById('annualLeave').value ? parseFloat(document.getElementById('annualLeave').value) : 20;
+      const annualLeaveDays = hasLongService ? 25 : 20;
       const bankHolidays = document.getElementById('bankHolidays').value ? parseFloat(document.getElementById('bankHolidays').value) : 8;
       const closureDays = document.getElementById('closureDays').value ? parseFloat(document.getElementById('closureDays').value) : 13;
 
@@ -94,24 +94,24 @@
 
       const peakWeekHours = 40 * fte;
       const peakWeeks = 43;
-      const reducedWeeks = workingWeeks - peakWeeks;
-      const reducedWeekHours = (userAnnualHours - (peakWeeks * peakWeekHours)) / reducedWeeks;
+      const nonPeakWeeks = workingWeeks - peakWeeks;
+      const nonPeakWeekHours = (userAnnualHours - (peakWeeks * peakWeekHours)) / nonPeakWeeks;
 
       const leaveInPeakWeeks = (leaveHours / peakWeekHours).toFixed(2);
-      const leaveInReducedWeeks = (leaveHours / reducedWeekHours).toFixed(2);
+      const leaveInNonPeakWeeks = (leaveHours / nonPeakWeekHours).toFixed(2);
       const leaveInDays = (leaveHours / 8).toFixed(2);
 
       resultData = {
         'FTE': fte,
         'Working Weeks': workingWeeks,
-        'Annual Leave Days': annualLeaveDays,
+        'Annual Leave Days (incl. Long Service)': annualLeaveDays,
         'Bank Holidays': bankHolidays,
         'Closure Days': closureDays,
         'Total Leave (hrs)': leaveHours.toFixed(2),
         'Annual Contracted Hours': userAnnualHours.toFixed(2),
         'Peak Week Hours': peakWeekHours.toFixed(2),
-        'Reduced Weeks': reducedWeeks.toFixed(2),
-        'Reduced Week Hours': reducedWeekHours.toFixed(2)
+        'Non-Peak Weeks': nonPeakWeeks.toFixed(2),
+        'Non-Peak Week Hours': nonPeakWeekHours.toFixed(2)
       };
 
       const resultsDiv = document.getElementById('results');
@@ -120,14 +120,14 @@
         <strong>Total Leave:</strong> ${resultData['Total Leave (hrs)']} hrs<br>
         - Equivalent to ${leaveInDays} days at 8 hrs/day<br>
         - Or ${leaveInPeakWeeks} peak weeks (40 hrs/week)<br>
-        - Or ${leaveInReducedWeeks} reduced weeks (${resultData['Reduced Week Hours']} hrs/week)
+        - Or ${leaveInNonPeakWeeks} non-peak weeks (${resultData['Non-Peak Week Hours']} hrs/week)
         <div class="workings">
           <hr>
           <strong>Workings:</strong><br>
           Annual hours = (43 × 40) + ((WorkingWeeks − 43) × 22.67) × FTE × (WorkingWeeks / 52)<br>
           Leave hours = (AnnualLeave + BankHolidays + ClosureDays) × 8 × FTE<br>
           Peak week = 40 hrs × FTE<br>
-          Reduced week = derived from balancing remainder<br>
+          Non-peak week = derived from balancing remainder<br>
         </div>
       `;
     }
@@ -151,5 +151,64 @@
       document.body.removeChild(link);
     }
   </script>
+<div class="container" style="margin-top: 20px; font-size: 0.95em;">
+  <p><strong>Explanation:</strong></p>
+  <p>Leave is calculated in <strong>hours</strong> to ensure fairness across different working patterns and to reflect the actual time employees are entitled to take off.</p>
+  <p>Under the annualised model, the year is split into:</p>
+  <ul>
+    <li><strong>Peak Weeks:</strong> 43 weeks per year, where a full-time staff member works 40 hours per week (8 hours/day)</li>
+    <li><strong>Non-Peak Weeks:</strong> Remaining working weeks, where weekly hours are lower (e.g., around 22.67 hrs/week for full-time)</li>
+  </ul>
+  <p><strong>Illustrative Daily Lengths:</strong></p>
+  <ul>
+    <li>Peak Week: Full day = 8 hours, Half day = 4 hours</li>
+    <li>Non-Peak Week: Full day = Weekly hours ÷ 5, Half day = Weekly hours ÷ 10</li>
+  </ul>
+  <p>Always check your actual work pattern against these approximations to understand your specific entitlement.</p>
+</div>
+
+<div class="container" style="margin-top: 40px; font-size: 0.95em; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 20px; border-radius: 8px; box-shadow: 0 0 12px rgba(0,0,0,0.05);">
+  <h3 style="margin-top: 0;">Example Leave Request Estimator</h3>
+  <label for="leaveDaysRequested">Enter number of leave days you want to request:</label>
+  <input type="number" id="leaveDaysRequested" step="0.1" placeholder="e.g., 2">
+
+  <label><input type="radio" name="weekType" value="peak" checked> Applies to Peak Week</label>
+  <label><input type="radio" name="weekType" value="nonpeak"> Applies to Non-Peak Week</label>
+
+  <button onclick="calculateLeaveImpact()">Estimate Leave Impact</button>
+
+  <div id="leaveEstimatorResult" class="results" style="margin-top: 15px;"></div>
+</div>
+
+<script>
+function calculateLeaveImpact() {
+  const daysRequested = parseFloat(document.getElementById('leaveDaysRequested').value);
+  if (isNaN(daysRequested)) {
+    document.getElementById('leaveEstimatorResult').innerHTML = 'Please enter a valid number of leave days.';
+    return;
+  }
+
+  const weekType = document.querySelector('input[name="weekType"]:checked').value;
+  const peakDayHours = 8;
+  const nonPeakDayHours = resultData['Non-Peak Week Hours'] / 5;
+
+  const hoursPerDay = weekType === 'peak' ? peakDayHours : nonPeakDayHours;
+  const hoursRequested = daysRequested * hoursPerDay;
+  const leaveBalance = parseFloat(resultData['Total Leave (hrs)']);
+  const remainingBalance = leaveBalance - hoursRequested;
+
+  const daysLeftPeak = (remainingBalance / peakDayHours).toFixed(2);
+  const daysLeftNonPeak = (remainingBalance / nonPeakDayHours).toFixed(2);
+
+  document.getElementById('leaveEstimatorResult').innerHTML = `
+    <table style="width:100%; border-collapse: collapse;">
+      <tr><td><strong>Hours Requested:</strong></td><td>${hoursRequested.toFixed(2)} hrs</td></tr>
+      <tr><td><strong>Remaining Leave (hrs):</strong></td><td>${remainingBalance.toFixed(2)} hrs</td></tr>
+      <tr><td><strong>Equivalent Remaining Leave:</strong></td><td>${daysLeftPeak} days (Peak) or ${daysLeftNonPeak} days (Non-Peak)</td></tr>
+    </table>
+  `;
+}
+</script>
+
 </body>
 </html>
