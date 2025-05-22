@@ -41,6 +41,7 @@
       border-radius: 4px;
       cursor: pointer;
       margin-top: 10px;
+      margin-right: 10px;
     }
     .btn:hover {
       background-color: #005fa3;
@@ -90,19 +91,33 @@
 </div>
 
 <script>
+let resultData = {};
+
 function calculate() {
   const weeklyHours = parseFloat(document.getElementById('weeklyHours').value);
   const workingWeeks = parseFloat(document.getElementById('workingWeeks').value);
   const hasLongService = document.getElementById('hasLongService').checked;
 
   const FTE = (weeklyHours * workingWeeks) / 1924;
-  const annualHours = (43 * 40 + (workingWeeks - 43) * 22.67) * FTE;
+  const peakWeeks = 43;
+  const peakHours = 40;
+  const annualHours = (peakWeeks * peakHours + (workingWeeks - peakWeeks) * 22.67) * FTE;
   const leaveDays = hasLongService ? 25 : 20;
   const leaveHours = leaveDays * 8 * FTE;
   const leaveInDays = leaveHours / 8;
   const leaveInPeakWeeks = leaveHours / 40;
-  const nonPeakHours = (annualHours - (43 * 40 * FTE)) / (workingWeeks - 43);
+  const nonPeakHours = (annualHours - (peakWeeks * peakHours * FTE)) / (workingWeeks - peakWeeks);
   const leaveInNonPeakWeeks = leaveHours / nonPeakHours;
+
+  resultData = {
+    FTE,
+    annualHours,
+    leaveHours,
+    leaveInDays,
+    leaveInPeakWeeks,
+    leaveInNonPeakWeeks,
+    nonPeakHours
+  };
 
   document.getElementById('results').innerHTML = `
     <h2>Annualised Hours Summary</h2>
@@ -128,11 +143,46 @@ function calculate() {
     <p>Full day (Non-Peak) = ${(nonPeakHours / 5).toFixed(2)} hours<br><span class="half-day">Half day = ${(nonPeakHours / 10).toFixed(2)} hours</span></p>
     <p class="note">Excludes 13 Closure Days and 8 Public Holidays, which are fixed and not deducted from your annual leave balance.</p>
   `;
+
+  document.getElementById('leaveEstimator').innerHTML = `
+    <h2>Leave Request Estimator</h2>
+    <label for="daysRequested">Days of Leave Requested</label>
+    <input type="number" id="daysRequested" step="0.1" value="1">
+    <label><input type="radio" name="weekType" value="peak" checked> Applies to Peak Weeks</label>
+    <label><input type="radio" name="weekType" value="nonpeak"> Applies to Non-Peak Weeks</label>
+    <button class="btn" onclick="calculateLeaveImpact()">Estimate Leave Impact</button>
+    <div id="leaveOutput"></div>
+  `;
+}
+
+function calculateLeaveImpact() {
+  const days = parseFloat(document.getElementById('daysRequested').value);
+  const weekType = document.querySelector('input[name="weekType"]:checked').value;
+  const hoursPerDay = weekType === 'peak' ? 8 : resultData.nonPeakHours / 5;
+  const hoursRequested = days * hoursPerDay;
+  const leaveBefore = resultData.leaveHours;
+  const leaveAfter = leaveBefore - hoursRequested;
+
+  document.getElementById('leaveOutput').innerHTML = `
+    <table>
+      <tr><td>Hours Requested</td><td>${hoursRequested.toFixed(2)} hrs</td></tr>
+      <tr><td>Leave Before Request</td><td>${leaveBefore.toFixed(2)} hrs</td></tr>
+      <tr><td>Remaining Leave (hrs)</td><td>${leaveAfter.toFixed(2)} hrs</td></tr>
+      <tr><td>Equivalent Remaining Leave</td><td>${(leaveAfter / 8).toFixed(2)} days (Peak) or ${(leaveAfter / (resultData.nonPeakHours / 5)).toFixed(2)} days (Non-Peak)</td></tr>
+    </table>
+  `;
 }
 
 function downloadCSV() {
-  // Placeholder: implement CSV download logic later
-  alert("CSV download feature not implemented yet.");
+  const csv = `FTE,Annual Hours,Leave Hours,Leave Days (8 hrs),Leave Peak Weeks,Leave Non-Peak Weeks\n` +
+    `${resultData.FTE.toFixed(4)},${resultData.annualHours.toFixed(2)},${resultData.leaveHours.toFixed(2)},${resultData.leaveInDays.toFixed(2)},${resultData.leaveInPeakWeeks.toFixed(2)},${resultData.leaveInNonPeakWeeks.toFixed(2)}`;
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'annualised_hours_summary.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 </script>
 </body>
